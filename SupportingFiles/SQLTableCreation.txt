@@ -1,0 +1,46 @@
+CREATE TABLE Table_1
+(
+  Time		   DATETIME,
+  ComputerName NVARCHAR(MAX),
+  SettingType  NVARCHAR(MAX),
+  KeyName      NVARCHAR(MAX),
+  ValueType    NVARCHAR(MAX),
+  ValueData    NVARCHAR(MAX),
+  Ensure	   NVARCHAR(MAX)
+);
+
+CREATE TABLE Table_2
+(
+  Time				DATETIME,
+  ComputerName		NVARCHAR(MAX),
+  Type				NVARCHAR(MAX),
+  DestinationPath	NVARCHAR(MAX),
+  SourcePath	    NVARCHAR(MAX),
+  Ensure	 	    NVARCHAR(MAX)
+);
+
+CREATE TABLE Table_3
+(
+  Time				DATETIME,
+  ComputerName		NVARCHAR(MAX),
+  SettingType		NVARCHAR(MAX),
+  DisplayName		NVARCHAR(MAX),
+  Name			    NVARCHAR(MAX),
+  Description 	    NVARCHAR(MAX),
+  Path				NVARCHAR(MAX),
+  State				NVARCHAR(MAX),
+  StartupType		NVARCHAR(MAX),
+  Dependencies		NVARCHAR(MAX),
+  BuiltInAccount	NVARCHAR(MAX)
+);
+
+CREATE TABLE Table_4
+(
+  Time					DATETIME,
+  ComputerName			NVARCHAR(MAX),
+  SettingType			NVARCHAR(MAX),
+  DisplayName			NVARCHAR(MAX),
+  Name				    NVARCHAR(MAX),
+  IncludeAllSubFeatures	NVARCHAR(MAX),
+  Ensure				NVARCHAR(MAX)
+);
