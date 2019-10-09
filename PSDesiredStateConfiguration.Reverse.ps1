@@ -28,7 +28,9 @@
 
 param(
     [System.String[]] $RegistryPaths,
-    [Hashtable[]] $Folders
+    [Hashtable[]] $Folders,
+    [System.String[]] $Features,
+    [System.String[]] $Services
     )
 
 <## Script Settings #>
@@ -83,6 +85,18 @@ function Orchestrator
     {
         Write-Host "Scanning [Files and Folders]..." -BackgroundColor DarkGreen -ForegroundColor White
         Read-FilesAndFolders -Paths $Folders
+    }
+
+    if($null -ne $Features)
+    {
+        Write-Host "Scanning [Features]..." -BackgroundColor DarkGreen -ForegroundColor White
+        Read-WindowsFeatures -Paths $Features
+    }
+
+    if($null -ne $Services)
+    {
+        Write-Host "Scanning [Services..." -BackgroundColor DarkGreen -ForegroundColor White
+        Read-WindowsService -Services $Services
     }
 
     Write-Host "Configuring Local Configuration Manager (LCM)..." -BackgroundColor DarkGreen -ForegroundColor White
@@ -186,6 +200,70 @@ function Read-SubFilesAndFolders($file, $Source, $Shared)
     $Script:dscConfigContent += "            Ensure = 'Present';`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
+
+#Creates the Windows Features
+function Read-WindowsFeatures($Paths)
+{    
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_RoleResource\MSFT_RoleResource.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    
+    foreach($feature in $Paths)
+    {
+        $keys = Get-WindowsFeature -Name $feature
+
+        foreach($key in $keys)
+        {
+            <# Setting Primary Keys #>
+            $params.Key = $key.Name      
+
+            $params.ValueName = $prop
+            $results = Get-TargetResource -Name $Key.Name
+            $fullEntryName = $key.Name # + "\" + $prop
+            if(!$Script:allEntries.Contains($fullEntryName))
+            {
+                $Script:allEntries += $fullEntryName
+                Write-Host "$($key.Name)"
+                $Script:dscConfigContent += "        WindowsFeature " + [System.Guid]::NewGuid().toString() + "`r`n"
+                $Script:dscConfigContent += "        {`r`n"
+                $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+                $Script:dscConfigContent += "        }`r`n"
+            }
+        }
+    }
+}
+
+#Creates the Services
+function Read-WindowsService($Services)
+{    
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_ServiceResource\MSFT_ServiceResource.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    
+    foreach($service in $Services)
+    {
+        $keys = Get-Service -Name $service
+
+        foreach($key in $keys)
+        {
+            <# Setting Primary Keys #>
+            $params.Key = $key.Name      
+
+            $params.ValueName = $prop
+            $results = Get-TargetResource -Name $Key.Name
+            $fullEntryName = $key.Name # + "\" + $prop
+            if(!$Script:allEntries.Contains($fullEntryName))
+            {
+                $Script:allEntries += $fullEntryName
+                Write-Host "$($key.Name)"
+                $Script:dscConfigContent += "        Service " + [System.Guid]::NewGuid().toString() + "`r`n"
+                $Script:dscConfigContent += "        {`r`n"
+                $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+                $Script:dscConfigContent += "        }`r`n"
+            }
+        }
+    }
+}
 #endregion
 
 # Sets the DSC Configuration Data for the current server;
@@ -218,7 +296,6 @@ function Set-LCM
     $Script:dscConfigContent += "            RebootNodeIfNeeded = `$True`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
-
 
 <# This function is responsible for saving the output file onto disk. #>
 function Get-ReverseDSC()
@@ -261,7 +338,7 @@ function Get-ReverseDSC()
     Invoke-Item -Path $OutputDSCPath
 }
 
-FUNCTION SetupProvider
+function SetupProvider
 {
     param
 	(	        
